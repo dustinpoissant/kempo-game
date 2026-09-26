@@ -1,0 +1,58 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  # kempo/kempo-ui/kempo-server resolve from the registry, which is what a site
+  # installing this extension actually gets.
+  published:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    services:
+      # The data-layer suite needs a real database; it skips itself when none is reachable, so this
+      # is what makes it actually run rather than silently pass.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kempo
+          POSTGRES_PASSWORD: kempo
+          POSTGRES_DB: kempo_game_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://kempo:kempo@localhost:5432/kempo_game_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - run: npm ci
+
+      # kempo/kempo-ui/kempo-server are peer dependencies, which npm ci does not install.
+      # legacy-peer-deps (set repo-wide in .npmrc, needed so npm ci doesn't ERESOLVE on the several
+      # peer paths to kempo-server) also makes a bare `npm install <peer-name>` silently no-op
+      # instead of actually placing the package. --no-legacy-peer-deps forces a real install;
+      # --force is needed alongside it to get past that same ERESOLVE conflict.
+      - name: Install the host for the test gate
+        run: npm install --no-save --no-legacy-peer-deps --force kempo@latest kempo-ui@latest kempo-server@latest
+
+      - name: Apply database schema
+        run: npx drizzle-kit push --force
+
+      - name: Run Unit Tests
+        run: npm test

@@ -1,0 +1,103 @@
+name: Publish to npmjs
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version-type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+jobs:
+  publish:
+    # [skip publish] lands a commit on master without releasing while still running the tests,
+    # which a shared [skip ci] marker cannot do since that skips the test workflow too.
+    # A manual run always publishes.
+    if: "github.event_name == 'workflow_dispatch' || !(contains(github.event.head_commit.message, '[skip ci]') || contains(github.event.head_commit.message, '[skip publish]'))"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    services:
+      # Without this the data-layer suite skips itself, which reads as a pass — and this is the gate
+      # that stands between a broken generator and a published release.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kempo
+          POSTGRES_PASSWORD: kempo
+          POSTGRES_DB: kempo_game_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://kempo:kempo@localhost:5432/kempo_game_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm >=11.5.1; Node 22.x still bundles 10.9.x. Without this, OIDC
+      # publish auth is silently unavailable and the registry returns a 404 rather than an auth error.
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+
+      # kempo/kempo-ui/kempo-server are peer dependencies and are not installed by npm ci above.
+      # The published release is the right one to test against: it is what a site installing this
+      # extension will actually pair it with. legacy-peer-deps (set repo-wide in .npmrc, needed so
+      # npm ci doesn't ERESOLVE on the kempo/kempo-server dual-peer-path) makes a bare `npm install
+      # <peer-name>` silently no-op instead of actually placing the package — it treats the
+      # peerDependencies range as already "satisfied" with nothing on disk. --no-legacy-peer-deps
+      # forces a real resolution here, and --force is needed alongside it because a real resolution
+      # hits that same ERESOLVE conflict (the ranges genuinely overlap; npm's strict resolver just
+      # can't see it through two peer edges to the same package).
+      - name: Install the host for the test gate
+        run: npm install --no-save --no-legacy-peer-deps --force kempo@latest kempo-ui@latest kempo-server@latest
+
+      - name: Apply database schema
+        run: npx drizzle-kit push --force
+
+      - name: Run Unit Tests
+        run: npm test
+
+      - name: Set version type
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "type=${{ inputs.version-type }}" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump ${{ steps.version.outputs.type }} version
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          npm version ${{ steps.version.outputs.type }} --no-git-tag-version
+          git add -A || true
+          git commit -m "ci: bump ${{ steps.version.outputs.type }} version [skip ci]" || echo "No changes to commit"
+          # Must be the branch that triggered this run — hardcoding a branch name silently drifts
+          # git and npm apart the day the default branch changes.
+          git push origin HEAD:${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: npm publish --access public
