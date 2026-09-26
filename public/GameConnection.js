@@ -14,6 +14,10 @@ import { applyChanges } from './utils/changes.js';
       ignored; a gap means a patch was dropped (the channel skips a client that is behind) and asks for
       a fresh snapshot rather than guessing.
     - Patches that arrive while a snapshot is on its way are held and applied after it, if they are newer.
+    - A game lives in memory on the server, so a server that restarted no longer has its channel. The
+      resubscribe is then refused as unknown, and the connection asks `rejoin` (a function that opens the
+      game again and returns its channel) and subscribes to that, so play resumes without the page doing
+      anything. It does this once per failure, and gives up if the game cannot be opened.
 
   `ready` settles once the first snapshot has arrived.
 */
@@ -27,9 +31,12 @@ export default class GameConnection {
   #resolveReady;
   #rejectReady;
   #status = 'connecting';
+  #rejoin;
+  #rejoining = false;
 
-  constructor({ realtime, gameId, channel }){
+  constructor({ realtime, gameId, channel, rejoin }){
     this.#realtime = realtime;
+    this.#rejoin = rejoin;
     this.gameId = gameId;
     this.channel = channel;
     this.v = -1;
@@ -46,10 +53,7 @@ export default class GameConnection {
     // A caller that never awaits `ready` must not see an unhandled rejection
     this.ready.catch(() => {});
 
-    this.#stopSubscription = realtime.subscribe(channel, data => this.#received(data), {
-      onSubscribed: () => this.#sync(),
-      onError: error => this.#failed(error),
-    });
+    this.#subscribe();
     this.#stopDirect = realtime.onDirect(data => {
       if(data?.game === this.gameId && data.t === 'event') this.#emit('event', { name: data.name, data: data.data, private: true });
     });
@@ -104,6 +108,13 @@ export default class GameConnection {
   /*
     Internals
   */
+
+  #subscribe = () => {
+    this.#stopSubscription = this.#realtime.subscribe(this.channel, data => this.#received(data), {
+      onSubscribed: () => this.#sync(),
+      onError: error => this.#failed(error),
+    });
+  };
 
   #listen = (kind, listener) => {
     this.#listeners[kind].add(listener);
@@ -201,7 +212,26 @@ export default class GameConnection {
     }
   };
 
-  #failed = (error) => {
+  #failed = async (error) => {
+    // The channel is unknown here: the server restarted, or the game went idle and closed. Open it again
+    if(error?.code === 404 && this.#rejoin && !this.#rejoining && this.#stopSubscription){
+      this.#rejoining = true;
+      this.#setStatus('reconnecting');
+      try {
+        const channel = await this.#rejoin();
+        if(channel && this.#stopSubscription){
+          this.#stopSubscription();
+          this.channel = channel;
+          this.#subscribe();
+          return;
+        }
+      } catch(failure) {
+        error = failure;
+      } finally {
+        this.#rejoining = false;
+      }
+    }
+
     // 410 is the game ending on the server: it was deleted, or went idle and closed
     if(error?.code === 410){
       this.#setStatus('closed');

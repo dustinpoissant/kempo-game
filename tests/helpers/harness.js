@@ -1,4 +1,5 @@
 import { cp, rm, symlink, lstat, mkdir, writeFile } from 'fs/promises';
+import { execFileSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sql, eq, like } from 'drizzle-orm';
@@ -81,6 +82,10 @@ export const uninstall = async () => {
 
 export const install = async () => {
   await uninstall();
+
+  // kempo's own groups and permissions (system:Users and the rest). Every permission check reads them,
+  // and a check without them is a 500. Idempotent.
+  execFileSync(process.execPath, [path.join(nodeModules, 'kempo', 'scripts', 'init-db.js')], { cwd: root, stdio: 'ignore' });
   await mkdir(nodeModules, { recursive: true });
   await link();
   await cp(path.join(root, 'tests', 'fixtures', 'click-race'), fixtureTarget, { recursive: true });

@@ -10,7 +10,7 @@ export const onCreate = ({ settings }) => ({ status: 'racing', winner: null, tar
 export const onLoad = ({ session }) => {
   const scores = {};
   for(const player of session.players) scores[player.id] = 0;
-  session.setLive({ scores, connects: 0 });
+  session.setLive({ scores, stamps: {}, connects: 0 });
 };
 
 export const onConnect = ({ session, player }) => {
@@ -40,6 +40,9 @@ export const onInput = ({ session, player, input }) => {
   if(input?.type !== 'click') throw { code: 400, msg: 'Unknown input' };
 
   if(session.state.status === 'finished') throw { code: 409, msg: 'The race is over' };
+
+  // The capacity test stamps each click so it can time how long the other players take to hear of it
+  if(typeof input.t === 'number') session.live.stamps[player.id] = input.t;
 
   const scores = session.live.scores;
   scores[player.id] = (scores[player.id] || 0) + 1;

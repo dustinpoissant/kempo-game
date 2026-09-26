@@ -79,7 +79,15 @@ export const join = async (gameId, { timeout = 10000 } = {}) => {
   const [error, opened] = await request(`/games/${enc(gameId)}/join`, json('POST'));
   if(error) return [error, null];
 
-  const connection = new GameConnection({ realtime: realtime(), gameId, channel: opened.channel });
+  const connection = new GameConnection({
+    realtime: realtime(),
+    gameId,
+    channel: opened.channel,
+    rejoin: async () => {
+      const [rejoinError, again] = await request(`/games/${enc(gameId)}/join`, json('POST'));
+      return rejoinError ? null : again.channel;
+    },
+  });
 
   let timer;
   try {
