@@ -1,0 +1,93 @@
+<!--
+locked: true
+-->
+<page title="Games - Admin">
+<content>
+  <script type="module" src="/kempo/components/Permission.js"></script>
+  <script type="module" src="/kempo-ui/components/Icon.js"></script>
+
+  <div class="p">
+    <h1>Games</h1>
+    <p class="tc-muted">
+      Every game on the site, whichever game extension it belongs to. A game is <strong>running</strong>
+      while someone is connected to it on the process that answered this request, and is saved on a timer,
+      when its owner asks, and when the last player leaves. Deleting one removes it for everyone in it.
+    </p>
+
+    <k-permission has="game:admin">
+      <p id="status" class="tc-muted">Loading…</p>
+      <table id="games" hidden>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Players</th>
+            <th>Last saved</th>
+            <th>Running</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </k-permission>
+  </div>
+
+  <script type="module">
+    import { listAllGames, deleteGame } from '/game/sdk.js';
+
+    const status = document.getElementById('status');
+    const table = document.getElementById('games');
+    const body = table.querySelector('tbody');
+
+    const cell = (text) => {
+      const td = document.createElement('td');
+      td.textContent = text;
+      return td;
+    };
+
+    const load = async () => {
+      const [error, data] = await listAllGames();
+      if(error){
+        status.textContent = error.code === 403 ? 'You need the game:admin permission to see this.' : error.msg;
+        table.hidden = true;
+        return;
+      }
+
+      body.replaceChildren();
+      for(const game of data.games){
+        const row = document.createElement('tr');
+        row.append(
+          cell(game.name),
+          cell(game.type),
+          cell(String(game.playerCount)),
+          cell(game.savedAt ? new Date(game.savedAt).toLocaleString() : 'Never'),
+          cell(game.live ? 'Yes' : 'No'),
+        );
+
+        const actions = document.createElement('td');
+        const remove = document.createElement('button');
+        remove.className = 'btn';
+        remove.innerHTML = '<k-icon name="delete"></k-icon> Delete';
+        remove.addEventListener('click', async () => {
+          if(remove.dataset.armed !== 'yes'){
+            remove.dataset.armed = 'yes';
+            remove.textContent = 'Really delete?';
+            return;
+          }
+          const [deleteError] = await deleteGame(game.id);
+          if(deleteError) status.textContent = deleteError.msg;
+          await load();
+        });
+        actions.append(remove);
+        row.append(actions);
+        body.append(row);
+      }
+
+      status.textContent = data.games.length ? '' : 'There are no games yet.';
+      table.hidden = !data.games.length;
+    };
+
+    await load();
+  </script>
+</content>
+</page>

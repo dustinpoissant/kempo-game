@@ -14,6 +14,7 @@ export default async (request, response) => {
     id: type.id,
     label: type.label,
     description: type.description,
+    playUrl: type.playUrl,
     minPlayers: type.minPlayers,
     maxPlayers: type.maxPlayers,
     defaultSettings: type.defaultSettings,

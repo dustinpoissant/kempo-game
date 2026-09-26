@@ -28,6 +28,12 @@ import { getEnabledExtensions } from 'kempo/server/utils/extensions/scopeCache.j
     onSave({ session, save })                edit `save.state` to fold anything from `live` into what is saved
     onEnd({ session })                       the game stopped being live
 
+  Besides the rules, a type can say how it behaves: minPlayers and maxPlayers, tickRate (steps a second while
+  anyone is connected, 0 for a game that reacts to input alone), autosaveSeconds and idleSeconds (to override
+  the site's), removeAfterSeconds (remove a non-owner who has been away this long, 0 to never), allowPlayerSave
+  (let any player save, not only the owner), defaultSettings, and playUrl (where the lobby sends a player who
+  clicks Play, with {id} standing for the game's id).
+
   It is loaded once and kept in memory. Handling input never touches the database or the disk.
 */
 
@@ -89,6 +95,10 @@ const normalise = (extension, raw) => {
     report(`${id} was left out: minPlayers is greater than maxPlayers`);
     return null;
   }
+  if(raw.playUrl !== undefined && (typeof raw.playUrl !== 'string' || !raw.playUrl.startsWith('/') || !raw.playUrl.includes('{id}'))){
+    report(`${id} was left out: playUrl must be a site path containing {id}, such as "/tic-tac-toe/play?game={id}"`);
+    return null;
+  }
   if(raw.defaultSettings !== undefined && (typeof raw.defaultSettings !== 'object' || raw.defaultSettings === null || Array.isArray(raw.defaultSettings))){
     report(`${id} was left out: defaultSettings must be an object`);
     return null;
@@ -108,6 +118,7 @@ const normalise = (extension, raw) => {
     idleSeconds,
     removeAfterSeconds,
     allowPlayerSave: raw.allowPlayerSave === true,
+    playUrl: raw.playUrl || null,
     defaultSettings: raw.defaultSettings || {},
   };
 };
