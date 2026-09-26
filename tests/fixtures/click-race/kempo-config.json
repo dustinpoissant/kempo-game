@@ -1,0 +1,57 @@
+{
+  "dependencies": ["kempo-game"],
+  "game": {
+    "types": [
+      {
+        "name": "click-race",
+        "label": "Click race",
+        "description": "Two players click as fast as they can. First to the target wins.",
+        "module": "./game.js",
+        "minPlayers": 2,
+        "maxPlayers": 2,
+        "tickRate": 20,
+        "autosaveSeconds": 2,
+        "idleSeconds": 3,
+        "defaultSettings": { "target": 100 }
+      },
+      {
+        "name": "crowd",
+        "label": "Crowd",
+        "description": "The same rules for up to twenty players, used to measure capacity.",
+        "module": "./game.js",
+        "minPlayers": 1,
+        "maxPlayers": 20,
+        "tickRate": 20,
+        "autosaveSeconds": 2,
+        "idleSeconds": 3,
+        "defaultSettings": { "target": 1000000000 }
+      },
+      {
+        "name": "turns",
+        "label": "Turns",
+        "description": "No tick, saved only on request, and a player who is away for a second is removed.",
+        "module": "./game.js",
+        "minPlayers": 1,
+        "maxPlayers": 3,
+        "tickRate": 0,
+        "autosaveSeconds": 0,
+        "idleSeconds": 3,
+        "removeAfterSeconds": 1,
+        "allowPlayerSave": true
+      },
+      {
+        "name": "plain",
+        "label": "Plain",
+        "description": "Declares no timings of its own, so it gets the site's defaults.",
+        "module": "./game.js",
+        "minPlayers": 1,
+        "maxPlayers": 2,
+        "tickRate": 0
+      },
+      {
+        "name": "broken",
+        "module": "../escape.js"
+      }
+    ]
+  }
+}

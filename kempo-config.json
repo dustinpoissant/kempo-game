@@ -1,0 +1,58 @@
+{
+  "docs": "https://github.com/dustinpoissant/kempo-game#readme",
+  "git": "https://github.com/dustinpoissant/kempo-game",
+  "public-scope": "game",
+  "schema": "./server/db/schema.js",
+  "hooks": {
+    "realtime:subscribed": "./hooks/realtime-subscribed.js",
+    "realtime:unsubscribed": "./hooks/realtime-unsubscribed.js"
+  },
+  "permissions": [
+    { "name": "game:play", "description": "Create games, accept invitations and play them" },
+    { "name": "game:admin", "description": "See every game, and delete any of them" }
+  ],
+  "settings": [
+    {
+      "name": "autosave_seconds",
+      "value": "30",
+      "type": "number",
+      "description": "How often a running game with unsaved changes is saved. 0 turns automatic saving off; a game type can set its own"
+    },
+    {
+      "name": "idle_seconds",
+      "value": "30",
+      "type": "number",
+      "description": "How long a running game with nobody connected is kept before it is saved and stopped. 0 keeps it running until it is deleted or the server stops"
+    },
+    {
+      "name": "max_state_bytes",
+      "value": "5000000",
+      "type": "number",
+      "description": "The largest a game's saved state may be. A save over this is refused"
+    },
+    {
+      "name": "max_settings_bytes",
+      "value": "100000",
+      "type": "number",
+      "description": "The largest a game's settings may be"
+    },
+    {
+      "name": "max_games_per_user",
+      "value": "50",
+      "type": "number",
+      "description": "How many games one user may own. 0 is unlimited"
+    }
+  ],
+  "groups": [
+    {
+      "name": "kempo-game:player",
+      "description": "Can create games, accept invitations and play. This is the group that gates the feature: nobody can play without it",
+      "permissions": ["game:play"]
+    },
+    {
+      "name": "kempo-game:administrator",
+      "description": "Can play, and can see and delete every game",
+      "permissions": ["game:play", "game:admin"]
+    }
+  ]
+}

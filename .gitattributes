@@ -1,0 +1,5 @@
+# Normalise every text file to LF in the repository, and check it out with the
+# platform's native endings. Without this, a Windows build writes CRLF into files that
+# checkout wrote as LF, so git reports them as modified even though the content is
+# identical — `git diff` shows nothing while `git status` shows a change.
+* text=auto

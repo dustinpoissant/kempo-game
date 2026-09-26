@@ -1,0 +1,7 @@
+{
+  "name": "kempo-game-test-click-race",
+  "version": "1.0.0",
+  "description": "A game for kempo-game's own tests. Never shipped.",
+  "type": "module",
+  "kempo": {}
+}
