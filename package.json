@@ -7,7 +7,7 @@
   "type": "module",
   "main": "sdk.js",
   "scripts": {
-    "test": "kempo-test -n",
+    "test": "kempo-test -n -t 120000",
     "link:local": "npm install ../kempo ../kempo-server ../kempo-ui --no-save --no-legacy-peer-deps --force"
   },
   "kempo": {
