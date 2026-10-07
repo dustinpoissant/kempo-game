@@ -69,13 +69,13 @@ A game is its own extension. It depends on kempo-game and declares what it is in
   "game": {
     "types": [
       {
-        "name": "tic-tac-toe",
-        "label": "Tic-tac-toe",
+        "name": "my-game",
+        "label": "My game",
         "module": "./game.js",
         "minPlayers": 2,
         "maxPlayers": 2,
         "tickRate": 0,
-        "playUrl": "/tic-tac-toe/play?game={id}"
+        "playUrl": "/my-game/play?game={id}"
       }
     ]
   }

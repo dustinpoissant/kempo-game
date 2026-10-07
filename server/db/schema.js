@@ -4,7 +4,7 @@ import { pgTable, text, integer, timestamp, jsonb, uniqueIndex, index } from 'dr
   Two tables, and nothing in either of them knows what a game is *about*.
 
   `settings` and `state` are documents. A game type decides their shape; this extension only stores
-  them and never looks inside. That is what lets the same two tables hold a tic-tac-toe board and,
+  them and never looks inside. That is what lets the same two tables hold a small board game and,
   one day, a world with a hundred thousand blocks.
 
   What is kept here is what has to survive a restart. Positions and other things that change many

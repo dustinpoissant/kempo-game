@@ -7,7 +7,7 @@ import { getEnabledExtensions } from 'kempo/server/utils/extensions/scopeCache.j
 
   A game is its own kempo (CMS) extension, and it says what it is in its kempo-config.json:
 
-    "game": { "types": [ { "name": "tic-tac-toe", "module": "./game.js", "minPlayers": 2, "maxPlayers": 2 } ] }
+    "game": { "types": [ { "name": "my-game", "module": "./game.js", "minPlayers": 2, "maxPlayers": 2 } ] }
 
   kempo stores that config in the extension table when the extension is installed, so this reads it from
   there. Nothing has to be loaded at startup and nothing depends on the order extensions load in, which
@@ -96,7 +96,7 @@ const normalise = (extension, raw) => {
     return null;
   }
   if(raw.playUrl !== undefined && (typeof raw.playUrl !== 'string' || !raw.playUrl.startsWith('/') || !raw.playUrl.includes('{id}'))){
-    report(`${id} was left out: playUrl must be a site path containing {id}, such as "/tic-tac-toe/play?game={id}"`);
+    report(`${id} was left out: playUrl must be a site path containing {id}, such as "/my-game/play?game={id}"`);
     return null;
   }
   if(raw.defaultSettings !== undefined && (typeof raw.defaultSettings !== 'object' || raw.defaultSettings === null || Array.isArray(raw.defaultSettings))){
