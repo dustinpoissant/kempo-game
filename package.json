@@ -1,6 +1,6 @@
 {
   "name": "kempo-game",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A generic multiplayer game layer for kempo: saved games with invited players, live state sync over kempo's realtime WebSockets, timed and on-demand saves, a backend SDK, hooks and a frontend SDK",
   "license": "MIT",
   "author": "Dustin Poissant",
