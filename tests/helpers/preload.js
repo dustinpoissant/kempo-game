@@ -9,6 +9,12 @@
   including `npx` in front of the framework and the children a test spawns (`node --check` per
   module, for example), and none of those should each build a database.
 */
-if(process.env.KEMPO_DB === 'pglite' && /kempo-testing-framework/.test(process.argv[1] || '')){
+/*
+  The framework is `node_modules/.bin/kempo-test` on Linux and macOS (argv[1] is that symlink, not the
+  real file) and `...\kempo-testing-framework\index.js` through the .cmd shim on Windows.
+*/
+const insideFramework = /kempo-test(ing-framework)?/.test(process.argv[1] || '');
+
+if(process.env.KEMPO_DB === 'pglite' && insideFramework){
   await import('kempo/server/db/index.js');
 }
