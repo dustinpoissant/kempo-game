@@ -7,6 +7,21 @@
     "realtime:subscribed": "./hooks/realtime-subscribed.js",
     "realtime:unsubscribed": "./hooks/realtime-unsubscribed.js"
   },
+  "widgets": [
+    {
+      "key": "games",
+      "title": "Games",
+      "description": "Every game on the site and the most recent ones.",
+      "icon": "group",
+      "element": "k-game-widget",
+      "module": "/game/components/GamesWidget.js",
+      "defaultWidth": 2,
+      "defaultHeight": 1,
+      "minWidth": 1,
+      "permission": "game:admin",
+      "priority": 90
+    }
+  ],
   "permissions": [
     { "name": "game:play", "description": "Create games, accept invitations and play them" },
     { "name": "game:admin", "description": "See every game, and delete any of them" }

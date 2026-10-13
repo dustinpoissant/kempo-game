@@ -327,3 +327,7 @@ The test game, "click race", lives in `tests/fixtures` and is never published. T
 - **Matchmaking, public game lists, spectators and chat.** Chat is a channel a game or another extension can add.
 - **Billing.** Access is `game:play` plus membership, which is where a paywall would sit; nothing here charges anyone.
 - **Save history or undo.** One current state per game.
+
+## Dashboard widget
+
+Adds a **Games** widget to the kempo admin dashboard showing how many games exist and the latest ones, with a **Manage games** button. It is declared in `widgets` in `kempo-config.json` and registered when the extension is installed or updated; people only see it if they hold its permission, and can hide, reorder or resize it from the dashboard's Customize dialog. Needs a kempo with the dashboard (see kempo's `docs/dashboard.md`); on an older kempo the entry is ignored.

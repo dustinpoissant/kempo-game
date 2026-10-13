@@ -4,6 +4,10 @@ All notable changes to `kempo-game` are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Dashboard widget.** A **Games** widget on the kempo admin dashboard showing how many games exist and the latest ones, with a **Manage games** button, declared in `widgets` in `kempo-config.json`. Needs a kempo with the dashboard; ignored on older versions.
+
 First release.
 
 A generic multiplayer game layer for kempo. It is not a game: it gives a game, which is its own kempo (CMS) extension, saved games with invited players, live sync between their browsers, saving, a backend SDK, hooks and a frontend SDK.
