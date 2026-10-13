@@ -17,7 +17,7 @@ const config = JSON.parse(await readFile(path.join(root, 'kempo-config.json'), '
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const core = await import(pathToFileURL(path.join(root, 'node_modules', 'kempo', 'server', 'utils', 'dashboard', 'helpers.js')).href).catch(() => null);
 
-const scope = `/${pkg.kempo?.['public-scope'] || config['public-scope']}/`;
+const scope = `/${config['public-scope']}/`;
 const permissions = new Set((config.permissions || []).map(p => p.name));
 
 const ELEMENT = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
@@ -41,6 +41,12 @@ const problems = widget => {
 };
 
 export default {
+  'package.json carries no kempo field: kempo-config.json is where an extension is declared': async ({ pass, fail }) => {
+    if('kempo' in pkg) return fail(`package.json has a kempo field (${JSON.stringify(pkg.kempo)}); move it into kempo-config.json`);
+    if(!config['public-scope']) return fail('kempo-config.json has no public-scope');
+    pass();
+  },
+
   'kempo-config.json declares at least one widget': async ({ pass, fail }) => {
     if(!Array.isArray(config.widgets) || !config.widgets.length) return fail('no widgets declared');
     pass(`${config.widgets.length} widget(s)`);

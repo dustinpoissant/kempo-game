@@ -98,7 +98,7 @@ export default {
     expect(pkg.files.includes('!server/db/migrations'), 'test-database migrations are never published');
     expect(!pkg.files.some(entry => entry.startsWith('tests')), 'tests are not published');
     expect(pkg.exports['./sdk'] === './sdk.js' && pkg.main === 'sdk.js', 'the SDK is the main entry');
-    expect(pkg.kempo['public-scope'] === config['public-scope'] && config['public-scope'] === 'game', 'the public scope is game, and both files agree');
+    expect(!('kempo' in pkg) && config['public-scope'] === 'game', 'the public scope is game, declared only in kempo-config.json');
     expect(config.schema === './server/db/schema.js' && await exists(path.join(root, 'server/db/schema.js')), 'the schema is declared');
     pass('package');
   },

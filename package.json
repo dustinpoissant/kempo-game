@@ -11,9 +11,6 @@
     "test:integration": "node scripts/run-tests.js integration kempo-test -n -t 120000",
     "link:local": "npm install ../kempo ../kempo-server ../kempo-ui --no-save --no-legacy-peer-deps --force"
   },
-  "kempo": {
-    "public-scope": "game"
-  },
   "exports": {
     "./install": "./install.js",
     "./update": "./update.js",
@@ -40,7 +37,7 @@
     "drizzle-orm": "^0.45.2"
   },
   "peerDependencies": {
-    "kempo": ">=4.4.0",
+    "kempo": ">=4.5.8",
     "kempo-server": ">=3.5.0",
     "kempo-ui": ">=0.4.53"
   },
