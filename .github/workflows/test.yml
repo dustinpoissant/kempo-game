@@ -11,9 +11,33 @@ on:
       - master
 
 jobs:
-  # kempo/kempo-ui/kempo-server resolve from the registry, which is what a site
-  # installing this extension actually gets.
-  published:
+  # Unit tier: an in-memory Postgres (PGlite), so there is no service to start and a database
+  # suite cannot skip for want of one.
+  unit:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - run: npm ci
+
+      # kempo/kempo-ui/kempo-server are peer dependencies, which npm ci does not install.
+      # legacy-peer-deps (set repo-wide in .npmrc, needed so npm ci doesn't ERESOLVE on the several
+      # peer paths to kempo-server) also makes a bare `npm install <peer-name>` silently no-op
+      # instead of actually placing the package. --no-legacy-peer-deps forces a real install;
+      # --force is needed alongside it to get past that same ERESOLVE conflict.
+      - name: Install the host for the test gate
+        run: npm install --no-save --no-legacy-peer-deps --force kempo@latest kempo-ui@latest kempo-server@latest
+
+      - name: Run unit tests
+        run: npm test
+
+  # Integration tier: the whole suite on a real Postgres. An unreachable database fails it.
+  integration:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     services:
@@ -54,5 +78,5 @@ jobs:
       - name: Apply database schema
         run: npx drizzle-kit push --force
 
-      - name: Run Unit Tests
-        run: npm test
+      - name: Run integration tests
+        run: npm run test:integration

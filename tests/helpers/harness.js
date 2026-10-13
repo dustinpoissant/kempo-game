@@ -31,8 +31,18 @@ const selfLink = path.join(nodeModules, GAME_EXTENSION);
 
 const databaseName = (process.env.DATABASE_URL || '').split('/').pop().split('?')[0];
 
-export const databaseReachable = /_test$/.test(databaseName)
+/*
+  The unit tier (KEMPO_DB=pglite) is an in-memory database and always a throwaway. Otherwise the
+  database must be one whose name ends in _test, since these suites delete every game and test user.
+*/
+const inMemory = process.env.KEMPO_DB === 'pglite';
+
+export const databaseReachable = (inMemory || /_test$/.test(databaseName))
   && await db.execute(sql`select 1`).then(() => true).catch(() => false);
+
+if(!databaseReachable && process.env.KEMPO_TEST_TIER === 'integration'){
+  throw new Error('The integration tier needs DATABASE_URL pointing at a throwaway Postgres named *_test with the schema applied (npx drizzle-kit push --force).');
+}
 
 export const skipReason = () => (
   /_test$/.test(databaseName)

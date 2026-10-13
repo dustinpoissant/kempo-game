@@ -6,6 +6,7 @@ import {
   databaseReachable, skipped, install, uninstall, purgeData, makeUser, makeAdmin, root,
   expect, until, wait, FIXTURE, PASSWORD, db, kempoGame,
 } from './helpers/harness.js';
+import { unitTier, integrationOnly } from './helpers/db.js';
 import { RealtimeClient } from 'kempo/dist/kempo/realtime.js';
 import GameConnection from '../public/GameConnection.js';
 
@@ -429,7 +430,7 @@ const suite = () => ({
   }
 });
 
-export default databaseReachable
+const serverSuite = databaseReachable
   ? {
     'setup: install, and start a real server': async ({ pass }) => {
       await install();
@@ -452,3 +453,9 @@ export default databaseReachable
     }
   }
   : skipped('click race');
+
+/*
+  This suite boots a real server as a second process, which cannot share the unit tier's in-memory
+  database, so it belongs to the integration tier (`npm run test:integration`).
+*/
+export default unitTier ? integrationOnly('click race') : serverSuite;

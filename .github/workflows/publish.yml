@@ -76,8 +76,11 @@ jobs:
       - name: Apply database schema
         run: npx drizzle-kit push --force
 
-      - name: Run Unit Tests
+      - name: Run unit tests
         run: npm test
+
+      - name: Run integration tests
+        run: npm run test:integration
 
       - name: Set version type
         id: version
