@@ -42,3 +42,8 @@ A generic multiplayer game layer for kempo. It is not a game: it gives a game, w
 - A game must be reached on one process. With several processes, route by game id.
 - Measured on one process over loopback: 20 players at 20 inputs a second in a game, and ten such games at once, lost nothing, wrote nothing to the database and had a median of 32 ms and a 99th percentile of 72 ms from one player's input to the others seeing it. See the README for the caveats.
 - Requires kempo 4.4 or later, which added `realtime.unregisterChannel` and the browser client's `onSubscribed`.
+
+## [0.1.9] - 2026-10-26
+### Changed
+- The games list is a kempo-ui table. Delete is a row control, and it asks for confirmation in the usual dialog.
+- Requires kempo 4.9.7 (the admin lists use kempo-ui tables).
